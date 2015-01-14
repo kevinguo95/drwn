@@ -586,7 +586,7 @@ void drwnGrabCutInstance::updateUnaryPotentials()
             }
 
             // evaluate difference in log-likelihood
-            vector<unsigned char> colour(pixelColour(y, x)); //is this a declaration?
+            vector<unsigned char> colour(pixelColour(y, x));
 
 			double p_fg = _fgColourModel.probability(colour.at(0), colour.at(1), colour.at(2));
 			double p_bg = _bgColourModel.probability(colour.at(0), colour.at(1), colour.at(2));
