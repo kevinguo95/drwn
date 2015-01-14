@@ -1,7 +1,7 @@
 /*****************************************************************************
 ** DARWIN: A FRAMEWORK FOR MACHINE LEARNING RESEARCH AND DEVELOPMENT
 ** Distributed under the terms of the BSD license (see the LICENSE file)
-** Copyright (c) 2007-2015, Stephen Gould
+** Copyright (c) 2007-2014, Stephen Gould
 ** All rights reserved.
 **
 ******************************************************************************
@@ -89,4 +89,7 @@ class drwnColourHistogram {
 
     // operators
     const double& operator[](size_t indx) const { return _histogram[indx]; } 
+	
+	bool save(drwnXMLNode& xml) const;
+	bool load(drwnXMLNode& xml);
 };

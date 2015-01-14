@@ -1,7 +1,7 @@
 /*****************************************************************************
 ** DARWIN: A FRAMEWORK FOR MACHINE LEARNING RESEARCH AND DEVELOPMENT
 ** Distributed under the terms of the BSD license (see the LICENSE file)
-** Copyright (c) 2007-2015, Stephen Gould
+** Copyright (c) 2007-2014, Stephen Gould
 ** All rights reserved.
 **
 ******************************************************************************
@@ -19,6 +19,7 @@
 #include "drwnIO.h"
 #include "drwnML.h"
 
+#include "drwnColourHistogram.h"
 #include "drwnPixelNeighbourContrasts.h"
 
 using namespace std;
@@ -67,8 +68,8 @@ protected:
     int _numUnknown;           //!< number of unknown pixels in _mask
 
     // cached data
-    drwnGaussianMixture _fgColourModel; //!< foreground colour model
-    drwnGaussianMixture _bgColourModel; //!< background colour model
+    drwnColourHistogram _fgColourModel; //!< foreground colour model
+    drwnColourHistogram _bgColourModel; //!< background colour model
 
     cv::Mat _unary;            //!< unary potentials, \psi_i(y_i == background)
     drwnPixelNeighbourContrasts *_pairwise; //!< pairwise potentials
@@ -137,8 +138,8 @@ public:
         const char *colorModelFile = NULL);
 
     //! update colour models
-    void updateColourModels(const drwnGaussianMixture& fgColourModel,
-        const drwnGaussianMixture& bgColourModel) {
+    void updateColourModels(const drwnColourHistogram& fgColourModel,
+        const drwnColourHistogram& bgColourModel) {
         _fgColourModel = fgColourModel;
         _bgColourModel = bgColourModel;
         updateUnaryPotentials();
@@ -193,10 +194,10 @@ protected:
     void free();
 
     //! extract pixel colour as a 3-vector
-    inline vector<double> pixelColour(int y, int x) const;
+    inline vector<unsigned char> pixelColour(int y, int x) const;
 
     //! learn a gaussian mixture model for pixels in masked region
-    void learnColourModel(const cv::Mat& mask, drwnGaussianMixture& model);
+    void learnColourModel(const cv::Mat& mask, drwnColourHistogram& model);
 
     //! update unary potential from colour models
     virtual void updateUnaryPotentials();

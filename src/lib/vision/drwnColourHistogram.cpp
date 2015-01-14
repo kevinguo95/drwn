@@ -1,7 +1,7 @@
 /*****************************************************************************
 ** DARWIN: A FRAMEWORK FOR MACHINE LEARNING RESEARCH AND DEVELOPMENT
 ** Distributed under the terms of the BSD license (see the LICENSE file)
-** Copyright (c) 2007-2015, Stephen Gould
+** Copyright (c) 2007-2014, Stephen Gould
 ** All rights reserved.
 **
 ******************************************************************************
@@ -88,4 +88,14 @@ cv::Mat drwnColourHistogram::visualize() const
     }
 
     return canvas;
+}
+
+bool drwnColourHistogram::save(drwnXMLNode& xml) const
+{
+	DRWN_TODO;
+}
+
+bool drwnColourHistogram::load(drwnXMLNode& xml) 
+{
+	DRWN_TODO;
 }

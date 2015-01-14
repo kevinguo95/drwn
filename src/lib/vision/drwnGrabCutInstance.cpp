@@ -1,7 +1,7 @@
 /*****************************************************************************
 ** DARWIN: A FRAMEWORK FOR MACHINE LEARNING RESEARCH AND DEVELOPMENT
 ** Distributed under the terms of the BSD license (see the LICENSE file)
-** Copyright (c) 2007-2015, Stephen Gould
+** Copyright (c) 2007-2014, Stephen Gould
 ** All rights reserved.
 **
 ******************************************************************************
@@ -506,17 +506,17 @@ void drwnGrabCutInstance::free()
     if (_pairwise != NULL) { delete _pairwise; _pairwise = NULL; }
 }
 
-vector<double> drwnGrabCutInstance::pixelColour(int y, int x) const
+vector<unsigned char> drwnGrabCutInstance::pixelColour(int y, int x) const
 {
     const unsigned char *p = _img.ptr<const unsigned char>(y) + 3 * x;
-    vector<double> colour(3);
-    colour[2] = (double)p[0] / 255.0;
-    colour[1] = (double)p[1] / 255.0;
-    colour[0] = (double)p[2] / 255.0;
+    vector<unsigned char> colour(3);
+    colour[2] = p[0];
+    colour[1] = p[1];
+    colour[0] = p[2];
     return colour;
 }
 
-void drwnGrabCutInstance::learnColourModel(const cv::Mat& mask, drwnGaussianMixture &model)
+void drwnGrabCutInstance::learnColourModel(const cv::Mat& mask, drwnColourHistogram &model)
 {
     DRWN_ASSERT((mask.rows == _img.rows) && (mask.cols == _img.cols));
     if (maxSamples == 0) {
@@ -527,15 +527,18 @@ void drwnGrabCutInstance::learnColourModel(const cv::Mat& mask, drwnGaussianMixt
     DRWN_FCN_TIC;
 
     // extract colour samples for pixels in mask
-    vector<vector<double> > data;
+    vector<unsigned char> clrVector;
     for (int y = 0; y < _img.rows; y++) {
         for (int x = 0; x < _img.cols; x++) {
             if (mask.at<unsigned char>(y, x) != 0x00) {
-                data.push_back(pixelColour(y, x));
+                //data.push_back(pixelColour(y, x));
+				clrVector = pixelColour(y, x);
+				model.accumulate(clrVector.at(0), clrVector.at(1), clrVector.at(2));
             }
         }
     }
-
+	//drwnShowDebuggingImage(model.visualize(), string("histogram"), true);
+/*
     // subsample if too many
     data = drwn::subSample(data, maxSamples);
     DRWN_LOG_VERBOSE("learning " << numMixtures << "-component model using "
@@ -560,7 +563,7 @@ void drwnGrabCutInstance::learnColourModel(const cv::Mat& mask, drwnGaussianMixt
     DRWN_ASSERT(data.size() > 1);
     model.initialize(3, std::min(numMixtures, (int)data.size() - 1));
     model.train(data);
-
+*/
     DRWN_FCN_TOC;
 }
 
@@ -583,12 +586,13 @@ void drwnGrabCutInstance::updateUnaryPotentials()
             }
 
             // evaluate difference in log-likelihood
-            vector<double> colour(pixelColour(y, x));
+            vector<unsigned char> colour(pixelColour(y, x)); //is this a declaration?
 
-            double p_fg = _fgColourModel.evaluateSingle(colour);
-            double p_bg = _bgColourModel.evaluateSingle(colour);
-            DRWN_ASSERT(isfinite(p_fg) && isfinite(p_bg));
-            _unary.at<float>(y, x) = (float)(p_fg - p_bg);
+			double p_fg = _fgColourModel.probability(colour.at(0), colour.at(1), colour.at(2));
+			double p_bg = _bgColourModel.probability(colour.at(0), colour.at(1), colour.at(2));
+			//assert probabilities are between 0 and 1
+			DRWN_ASSERT((p_fg >= 0 && p_fg <= 1 && p_bg >= 0 && p_bg <= 1));
+            _unary.at<float>(y, x) = (float)(log(p_fg) - log(p_bg));
         }
     }
 
