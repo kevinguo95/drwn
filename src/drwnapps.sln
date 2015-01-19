@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C++ Express 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testDarwinIO", "msvc\testDarwinIO.vcxproj", "{77395F71-EB0E-4019-96C0-AE712C69FFA3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testDarwinML", "msvc\testDarwinML.vcxproj", "{E68A17E7-07AC-4792-9394-789E9059A314}"

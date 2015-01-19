@@ -168,7 +168,7 @@ void drwnGrabCutInstance::initialize(const cv::Mat& img, const cv::Mat& inferMas
     DRWN_ASSERT(img.type() == CV_8UC3);
     DRWN_ASSERT(inferMask.type() == CV_8UC1);
     DRWN_ASSERT(trueMask.type() == CV_8UC1);
-
+	DRWN_ASSERT(inferMask.data != NULL);
     // delete previous instance data
     free();
 
@@ -531,40 +531,14 @@ void drwnGrabCutInstance::learnColourModel(const cv::Mat& mask, drwnColourHistog
     for (int y = 0; y < _img.rows; y++) {
         for (int x = 0; x < _img.cols; x++) {
             if (mask.at<unsigned char>(y, x) != 0x00) {
-                //data.push_back(pixelColour(y, x));
-				clrVector = pixelColour(y, x);
+               	clrVector = pixelColour(y, x);
 				model.accumulate(clrVector.at(0), clrVector.at(1), clrVector.at(2));
             }
         }
     }
 	//drwnShowDebuggingImage(model.visualize(), string("histogram"), true);
-/*
-    // subsample if too many
-    data = drwn::subSample(data, maxSamples);
-    DRWN_LOG_VERBOSE("learning " << numMixtures << "-component model using "
-        << data.size() << " pixels...");
 
-    // check variance of data
-    drwnSuffStats stats(3, DRWN_PSS_FULL);
-    stats.accumulate(data);
-    VectorXd mu = stats.firstMoments() / stats.count();
-    MatrixXd sigma = stats.secondMoments() / stats.count() - mu * mu.transpose();
-    double det = sigma.determinant();
-    if (det <= 0.0) {
-        DRWN_LOG_WARNING("no colour variation in data; adding noise (|Sigma| = " << det << ")");
-        for (unsigned i = 0; i < data.size(); i++) {
-            data[i][0] += 0.01 * (drand48() - 0.5);
-            data[i][1] += 0.01 * (drand48() - 0.5);
-            data[i][2] += 0.01 * (drand48() - 0.5);
-        }
-    }
-
-    // learn model
-    DRWN_ASSERT(data.size() > 1);
-    model.initialize(3, std::min(numMixtures, (int)data.size() - 1));
-    model.train(data);
-*/
-    DRWN_FCN_TOC;
+	DRWN_FCN_TOC;
 }
 
 void drwnGrabCutInstance::updateUnaryPotentials()
@@ -586,13 +560,14 @@ void drwnGrabCutInstance::updateUnaryPotentials()
             }
 
             // evaluate difference in log-likelihood
-            vector<unsigned char> colour(pixelColour(y, x));
+            vector<unsigned char> colour(pixelColour(y, x)); //is this a declaration?
 
 			double p_fg = _fgColourModel.probability(colour.at(0), colour.at(1), colour.at(2));
 			double p_bg = _bgColourModel.probability(colour.at(0), colour.at(1), colour.at(2));
 			//assert probabilities are between 0 and 1
-			DRWN_ASSERT((p_fg >= 0 && p_fg <= 1 && p_bg >= 0 && p_bg <= 1));
-            _unary.at<float>(y, x) = (float)(log(p_fg) - log(p_bg));
+			DRWN_ASSERT((p_fg > 0 && p_fg <= 1 && p_bg > 0 && p_bg <= 1));
+			DRWN_ASSERT(isfinite(log(p_fg)) && isfinite(log(p_bg)));
+			_unary.at<float>(y, x) = (float)(log(p_fg) - log(p_bg));
         }
     }
 

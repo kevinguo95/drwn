@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         DRWN_CMDLINE_STR_OPTION("-lcm", initialColourModelFile)
     DRWN_END_CMDLINE_PROCESSING(usage());
 
-    if ((DRWN_CMDLINE_ARGC != 1) && (DRWN_CMDLINE_ARGC != 2)) {
+    if ((DRWN_CMDLINE_ARGC != 1) && (DRWN_CMDLINE_ARGC != 2) && (DRWN_CMDLINE_ARGC != 3)) {
         usage();
         return -1;
     }
@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
     // load image
     const char *imgFilename = DRWN_CMDLINE_ARGV[0];
     const char *maskFilename = DRWN_CMDLINE_ARGC == 1 ? NULL : DRWN_CMDLINE_ARGV[1];
+	const char *trueMaskFilename = DRWN_CMDLINE_ARGC == 2 ? NULL : DRWN_CMDLINE_ARGV[2];
     cv::Mat img = cv::imread(string(imgFilename), CV_LOAD_IMAGE_COLOR);
 
     // load mask
@@ -93,8 +94,18 @@ int main(int argc, char *argv[])
         mask(bb) = cvScalar(drwnGrabCutInstance::MASK_C_FG); 
     } else {
         mask = cv::imread(string(maskFilename), CV_LOAD_IMAGE_GRAYSCALE);
+	
     }
 
+	//load true mask
+	cv::Mat trueMask;
+	if (trueMaskFilename != NULL) {
+		trueMask = cv::imread(string(trueMaskFilename), CV_LOAD_IMAGE_GRAYSCALE);
+
+	}
+	DRWN_ASSERT(trueMask.data != NULL);
+	DRWN_ASSERT(img.data != NULL);
+	DRWN_ASSERT(mask.data != NULL);
     // rescale image and mask
     if (scale != 1.0) {
         drwnResizeInPlace(img, (int)(scale * img.rows), (int)(scale * img.cols), CV_INTER_LINEAR);
@@ -105,8 +116,14 @@ int main(int argc, char *argv[])
     if (bVisualize) {
         drwnShowDebuggingImage(img, string("image"), false);
         drwnShowDebuggingImage(mask, string("mask"), false);
+		drwnShowDebuggingImage(trueMask, string("trueMask"), false);
     }
     drwnGrabCutInstance::bVisualize = bVisualize;
+
+	//prepare output text file
+	ofstream output;
+	output.open("out.txt", ios_base::app);
+	output << "\n";
 
     // run grabCut with different weights
     const double minWeight = (weight < 0.0) ? 1.0 : weight;
@@ -115,7 +132,9 @@ int main(int argc, char *argv[])
     model.name = drwn::strBaseName(imgFilename);
     for (double w = minWeight; w <= maxWeight; ) {
         // initialize model
-        model.initialize(img, mask, initialColourModelFile);
+		cout << w;
+		if (trueMaskFilename != NULL) model.initialize(img, mask, trueMask, initialColourModelFile);
+		else model.initialize(img, mask, initialColourModelFile);
         model.setBaseModelWeights(1.0, 0.0, w);
         cv::Mat seg = model.inference();
 
@@ -136,6 +155,9 @@ int main(int argc, char *argv[])
             cv::imwrite(filename, m);
         }
 
+		//write loss to a text file
+		output << " " << model.loss(seg);
+		
         // update weight
         if (w == 0.0) w = 1.0; else w *= 2.0;
     }
@@ -150,9 +172,14 @@ int main(int argc, char *argv[])
         cvWaitKey(-1);
     }
 
+
     // show profile information
     drwnCodeProfiler::toc(drwnCodeProfiler::getHandle("main"));
     drwnCodeProfiler::print();
+
+	//close text file
+	output.close();
+
     return 0;
 }
 
