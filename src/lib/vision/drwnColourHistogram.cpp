@@ -92,10 +92,32 @@ cv::Mat drwnColourHistogram::visualize() const
 
 bool drwnColourHistogram::save(drwnXMLNode& xml) const
 {
-	DRWN_TODO;
+	//DRWN_TODO;
+	drwnAddXMLAttribute(xml, "channelBits", toString(_channelBits).c_str(), false);
+	drwnAddXMLAttribute(xml, "mask", toString(_mask).c_str(), false);
+	drwnAddXMLAttribute(xml, "pseudoCounts", toString(_pseudoCounts).c_str(), false);
+	drwnAddXMLAttribute(xml, "totalCounts", toString(_totalCounts).c_str(), false);
+
+
+	drwnXMLNode *node = drwnAddXMLChildNode(xml, "histogram", NULL, false);
+	drwnXMLUtils::serialize(*node, (const char *) &_histogram[0], sizeof(double)*_histogram.size());
+
+	return true;
 }
 
 bool drwnColourHistogram::load(drwnXMLNode& xml) 
 {
-	DRWN_TODO;
+	//DRWN_TODO;
+	_channelBits = atoi(drwnGetXMLAttribute(xml, "channelBits"));
+	_mask = *drwnGetXMLAttribute(xml, "mask");
+	_pseudoCounts = atoi(drwnGetXMLAttribute(xml, "pseudoCounts"));
+	_totalCounts = stod(drwnGetXMLAttribute(xml, "totalCounts"));
+
+	const size_t bins = 0x00000001 << (3 * _channelBits);
+	_histogram.resize(bins);
+	drwnXMLNode *node = xml.first_node("histogram");
+	DRWN_ASSERT(node != NULL);
+	drwnXMLUtils::deserialize(*node, (char*)&_histogram[0], sizeof(double)*_histogram.size());
+
+	return true;
 }

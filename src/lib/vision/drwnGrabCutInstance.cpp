@@ -77,7 +77,7 @@ drwnGrabCutInstance::drwnGrabCutInstance(const drwnGrabCutInstance& instance) :
 
 drwnGrabCutInstance::~drwnGrabCutInstance()
 {
-    free();
+	free();
 }
 
 cv::Mat drwnGrabCutInstance::knownForeground() const
@@ -170,6 +170,8 @@ void drwnGrabCutInstance::initialize(const cv::Mat& img, const cv::Mat& inferMas
     DRWN_ASSERT(trueMask.type() == CV_8UC1);
 	DRWN_ASSERT(inferMask.data != NULL);
     // delete previous instance data
+	_fgColourModel.clear();
+	_bgColourModel.clear();
     free();
 
     // clone image and masks
@@ -210,7 +212,7 @@ void drwnGrabCutInstance::loadColourModels(const char *filename)
     _fgColourModel.load(*subnode);
     subnode = node->first_node("background");
     DRWN_ASSERT(subnode != NULL);
-    _bgColourModel.load(*subnode);
+	_bgColourModel.load(*subnode);
 
     updateUnaryPotentials();
 }
@@ -219,16 +221,14 @@ void drwnGrabCutInstance::loadColourModels(const char *filename)
 void drwnGrabCutInstance::saveColourModels(const char *filename) const
 {
     DRWN_ASSERT(filename != NULL);
-
     drwnXMLDoc xml;
     drwnXMLNode *node = drwnAddXMLChildNode(xml, "drwnGrabCutInstance", NULL, false);
-    drwnAddXMLAttribute(*node, "drwnVersion", DRWN_VERSION, false);
+	drwnAddXMLAttribute(*node, "drwnVersion", DRWN_VERSION, false);
 
     drwnXMLNode *child = drwnAddXMLChildNode(*node, "foreground", NULL, false);
     _fgColourModel.save(*child);
-
     child = drwnAddXMLChildNode(*node, "background", NULL, false);
-    _bgColourModel.save(*child);
+	_bgColourModel.save(*child);
 
     ofstream ofs(filename);
     ofs << xml << endl;
