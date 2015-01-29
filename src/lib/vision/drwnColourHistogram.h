@@ -97,6 +97,4 @@ class drwnColourHistogram : public drwnStdObjIface {
     // operators
     const double& operator[](size_t indx) const { return _histogram[indx]; } 
 	
-	bool save(drwnXMLNode& xml) const;
-	bool load(drwnXMLNode& xml);
 };

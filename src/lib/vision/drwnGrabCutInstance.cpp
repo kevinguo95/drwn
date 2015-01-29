@@ -60,7 +60,7 @@ int drwnGrabCutInstance::maxIterations = 10;
 // drwnGrabCutInstance ------------------------------------------------------
 
 drwnGrabCutInstance::drwnGrabCutInstance() :
-    _numUnknown(0), _fgColourModel(3, numMixtures), _bgColourModel(3, numMixtures),
+    _numUnknown(0), _fgColourModel(), _bgColourModel(),
     _pairwise(NULL), _unaryWeight(1.0), _pottsWeight(0.0), _pairwiseWeight(0.0)
 {
     // do nothing
