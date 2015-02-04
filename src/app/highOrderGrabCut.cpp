@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     }
 
     // learn foreground and background colour models
-    drwnGrabCutInstance model;
+    drwnGrabCutInstanceHistogram model;
     model.name = drwn::strBaseName(imgFilename);
     model.initialize(img, mask);
 

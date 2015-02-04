@@ -60,16 +60,14 @@ int drwnGrabCutInstance::maxIterations = 10;
 // drwnGrabCutInstance ------------------------------------------------------
 
 drwnGrabCutInstance::drwnGrabCutInstance() :
-    _numUnknown(0), _fgColourModel(), _bgColourModel(),
-    _pairwise(NULL), _unaryWeight(1.0), _pottsWeight(0.0), _pairwiseWeight(0.0)
+    _numUnknown(0), _pairwise(NULL), _unaryWeight(1.0), _pottsWeight(0.0), _pairwiseWeight(0.0)
 {
     // do nothing
 }
 
 drwnGrabCutInstance::drwnGrabCutInstance(const drwnGrabCutInstance& instance) :
     _img(instance._img.clone()), _trueMask(instance._trueMask.clone()), _mask(instance._mask.clone()),
-    _numUnknown(instance._numUnknown), _fgColourModel(instance._fgColourModel), _bgColourModel(instance._bgColourModel),
-    _unary(instance._unary.clone()), _pairwise(NULL),
+    _numUnknown(instance._numUnknown), _unary(instance._unary.clone()), _pairwise(NULL),
     _unaryWeight(instance._unaryWeight), _pottsWeight(instance._pottsWeight), _pairwiseWeight(instance._pairwiseWeight)
 {
     if (instance._pairwise != NULL) _pairwise = new drwnPixelNeighbourContrasts(*instance._pairwise);
@@ -170,8 +168,6 @@ void drwnGrabCutInstance::initialize(const cv::Mat& img, const cv::Mat& inferMas
     DRWN_ASSERT(trueMask.type() == CV_8UC1);
 	DRWN_ASSERT(inferMask.data != NULL);
     // delete previous instance data
-	_fgColourModel.clear();
-	_bgColourModel.clear();
     free();
 
     // clone image and masks
@@ -187,8 +183,8 @@ void drwnGrabCutInstance::initialize(const cv::Mat& img, const cv::Mat& inferMas
 
     // learn or load colour models
     if (colorModelFile == NULL) {
-        learnColourModel(foregroundColourMask(), _fgColourModel);
-        learnColourModel(backgroundColourMask(), _bgColourModel);
+        learnColourModel(foregroundColourMask(), FOREGROUND);
+        learnColourModel(backgroundColourMask(), BACKGROUND);
         updateUnaryPotentials();
     } else {
         DRWN_LOG_VERBOSE("loading colour models from " << colorModelFile);
@@ -199,42 +195,6 @@ void drwnGrabCutInstance::initialize(const cv::Mat& img, const cv::Mat& inferMas
     _pairwise = new drwnPixelNeighbourContrasts(_img);
 }
 
-// load colour models
-void drwnGrabCutInstance::loadColourModels(const char *filename)
-{
-    DRWN_ASSERT(filename != NULL);
-
-    drwnXMLDoc xml;
-    drwnXMLNode *node = drwnParseXMLFile(xml, filename, "drwnGrabCutInstance");
-
-    drwnXMLNode *subnode = node->first_node("foreground");
-    DRWN_ASSERT(subnode != NULL);
-    _fgColourModel.load(*subnode);
-    subnode = node->first_node("background");
-    DRWN_ASSERT(subnode != NULL);
-	_bgColourModel.load(*subnode);
-
-    updateUnaryPotentials();
-}
-
-// save colour models
-void drwnGrabCutInstance::saveColourModels(const char *filename) const
-{
-    DRWN_ASSERT(filename != NULL);
-    drwnXMLDoc xml;
-    drwnXMLNode *node = drwnAddXMLChildNode(xml, "drwnGrabCutInstance", NULL, false);
-	drwnAddXMLAttribute(*node, "drwnVersion", DRWN_VERSION, false);
-
-    drwnXMLNode *child = drwnAddXMLChildNode(*node, "foreground", NULL, false);
-    _fgColourModel.save(*child);
-    child = drwnAddXMLChildNode(*node, "background", NULL, false);
-	_bgColourModel.save(*child);
-
-    ofstream ofs(filename);
-    ofs << xml << endl;
-    DRWN_ASSERT(!ofs.fail());
-    ofs.close();
-}
 
 void drwnGrabCutInstance::setBaseModelWeights(double u, double p, double c) 
 {
@@ -419,7 +379,7 @@ cv::Mat drwnGrabCutInstance::inference()
                 DRWN_LOG_WARNING("segmentation is all background");
                 break;
             }
-            learnColourModel(mask, _fgColourModel);
+            learnColourModel(mask, FOREGROUND);
 
             cv::compare(lastSeg, cv::Scalar(MASK_BG), mask, CV_CMP_EQ);
             count = cv::countNonZero(mask);
@@ -427,7 +387,7 @@ cv::Mat drwnGrabCutInstance::inference()
                 DRWN_LOG_WARNING("segmentation is all foreground");
                 break;
             }
-            learnColourModel(mask, _bgColourModel);
+            learnColourModel(mask, BACKGROUND);
 
             updateUnaryPotentials();
         }
@@ -505,7 +465,7 @@ void drwnGrabCutInstance::free()
     _unary = cv::Mat();
     if (_pairwise != NULL) { delete _pairwise; _pairwise = NULL; }
 }
-
+/*
 vector<unsigned char> drwnGrabCutInstance::pixelColour(int y, int x) const
 {
     const unsigned char *p = _img.ptr<const unsigned char>(y) + 3 * x;
@@ -516,64 +476,7 @@ vector<unsigned char> drwnGrabCutInstance::pixelColour(int y, int x) const
     return colour;
 }
 
-void drwnGrabCutInstance::learnColourModel(const cv::Mat& mask, drwnColourHistogram &model)
-{
-    DRWN_ASSERT((mask.rows == _img.rows) && (mask.cols == _img.cols));
-    if (maxSamples == 0) {
-        DRWN_LOG_WARNING("skipping colour model learning (maxSamples is zero)");
-        return;
-    }
-
-    DRWN_FCN_TIC;
-
-    // extract colour samples for pixels in mask
-    vector<unsigned char> clrVector;
-    for (int y = 0; y < _img.rows; y++) {
-        for (int x = 0; x < _img.cols; x++) {
-            if (mask.at<unsigned char>(y, x) != 0x00) {
-               	clrVector = pixelColour(y, x);
-				model.accumulate(clrVector.at(0), clrVector.at(1), clrVector.at(2));
-            }
-        }
-    }
-	//drwnShowDebuggingImage(model.visualize(), string("histogram"), true);
-
-	DRWN_FCN_TOC;
-}
-
-void drwnGrabCutInstance::updateUnaryPotentials()
-{
-    DRWN_ASSERT(_img.data != NULL);
-
-    DRWN_FCN_TIC;
-    DRWN_LOG_VERBOSE("updating unary potentials for " << toString(_img) << "...");
-    if ((_unary.data == NULL) || (_unary.rows != _img.rows) || (_unary.cols != _img.cols)) {
-        _unary = cv::Mat(_img.rows, _img.cols, CV_32FC1);
-    }
-
-    for (int y = 0; y < _img.rows; y++) {
-        for (int x = 0; x < _img.cols; x++) {
-            // skip "known" pixels
-            if (!isUnknownPixel(x, y)) {
-                _unary.at<float>(y, x) = 0.0f;
-                continue;
-            }
-
-            // evaluate difference in log-likelihood
-            vector<unsigned char> colour(pixelColour(y, x)); //is this a declaration?
-
-			double p_fg = _fgColourModel.probability(colour.at(0), colour.at(1), colour.at(2));
-			double p_bg = _bgColourModel.probability(colour.at(0), colour.at(1), colour.at(2));
-			//assert probabilities are between 0 and 1
-			DRWN_ASSERT((p_fg > 0 && p_fg <= 1 && p_bg > 0 && p_bg <= 1));
-			DRWN_ASSERT(isfinite(log(p_fg)) && isfinite(log(p_bg)));
-			_unary.at<float>(y, x) = (float)(log(p_fg) - log(p_bg));
-        }
-    }
-
-    DRWN_FCN_TOC;
-}
-
+*/
 cv::Mat drwnGrabCutInstance::graphCut(const cv::Mat& unary) const
 {
     DRWN_ASSERT_MSG((unary.rows == _img.rows) && (unary.cols == _img.cols),

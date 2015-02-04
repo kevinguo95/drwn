@@ -22,6 +22,9 @@
 #include "drwnColourHistogram.h"
 #include "drwnPixelNeighbourContrasts.h"
 
+#define FOREGROUND 1
+#define BACKGROUND 0
+
 using namespace std;
 using namespace Eigen;
 
@@ -41,7 +44,6 @@ using namespace Eigen;
 //! MASK_BG are forced to take foreground or background labels, respectively.
 //!
 //! \sa \ref drwnAppGrabCut "grabCut Application"
-
 class drwnGrabCutInstance {
 public:
     static const unsigned char MASK_FG = 0xff;       //!< foreground mask
@@ -51,10 +53,10 @@ public:
     static const unsigned char MASK_C_BOTH = 0xc0;   //!< both colour mask
     static const unsigned char MASK_C_NONE = 0x20;   //!< neither colour mask
 
-    static bool bVisualize;    //!< visualize output
-    static size_t maxSamples;  //!< maximum samples to use for colour models
-    static int numMixtures;    //!< number of mixture components in colour models
-    static int maxIterations;  //!< maximum number of inference iterations
+	static size_t maxSamples;  //!< maximum samples to use for colour models
+	static bool bVisualize;    //!< visualize output
+	static int maxIterations;  //!< maximum number of inference iterations
+	static int numMixtures;    //!< number of mixture components in colour models
 
 public:
     // meta parameters
@@ -66,10 +68,6 @@ protected:
     cv::Mat _trueMask;         //!< ground-truth segmentation (trimap)
     cv::Mat _mask;             //!< segmentation mask (quadmap)
     int _numUnknown;           //!< number of unknown pixels in _mask
-
-    // cached data
-    drwnColourHistogram _fgColourModel; //!< foreground colour model
-    drwnColourHistogram _bgColourModel; //!< background colour model
 
     cv::Mat _unary;            //!< unary potentials, \psi_i(y_i == background)
     drwnPixelNeighbourContrasts *_pairwise; //!< pairwise potentials
@@ -138,16 +136,16 @@ public:
         const char *colorModelFile = NULL);
 
     //! update colour models
-    void updateColourModels(const drwnColourHistogram& fgColourModel,
-        const drwnColourHistogram& bgColourModel) {
-        _fgColourModel = fgColourModel;
-        _bgColourModel = bgColourModel;
-        updateUnaryPotentials();
-    }
+	virtual void updateColourModels(drwnColourHistogram& fgColourModel,
+		drwnColourHistogram& bgColourModel) = 0; 
+	virtual void updateColourModels(drwnGaussianMixture& fgColourModel,
+		drwnGaussianMixture& bgColourModel) = 0;
+
+
     //! load colour models
-    void loadColourModels(const char *filename);
+    virtual void loadColourModels(const char *filename) = 0;
     //! save colour models
-    void saveColourModels(const char *filename) const;
+    virtual void saveColourModels(const char *filename) const = 0;
 
     //! sets unary and pairwise weights
     void setBaseModelWeights(double u, double p, double c);
@@ -194,13 +192,13 @@ protected:
     void free();
 
     //! extract pixel colour as a 3-vector
-    inline vector<unsigned char> pixelColour(int y, int x) const;
-
-    //! learn a gaussian mixture model for pixels in masked region
-    void learnColourModel(const cv::Mat& mask, drwnColourHistogram& model);
+    //virtual vector<unsigned char> pixelColour(int y, int x) const = 0;
 
     //! update unary potential from colour models
-    virtual void updateUnaryPotentials();
+    virtual void updateUnaryPotentials() = 0;
+
+	virtual void learnColourModel(const cv::Mat& mask, bool fg) = 0;
+
 
     //! graph-cut inference
     virtual cv::Mat graphCut(const cv::Mat& unary) const;

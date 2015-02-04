@@ -28,6 +28,8 @@
 #include "drwnBase.h"
 #include "drwnVision.h"
 
+
+
 using namespace std;
 using namespace Eigen;
 
@@ -129,7 +131,7 @@ int main(int argc, char *argv[])
     // run grabCut with different weights
     const double minWeight = (weight < 0.0) ? 0.0 : weight;
     const double maxWeight = (weight < 0.0) ? 256.0 : weight;
-    drwnGrabCutInstance model;
+    drwnGrabCutInstanceGMM model;
     model.name = drwn::strBaseName(imgFilename);
     for (double w = minWeight; w <= maxWeight; ) {
         // initialize model
