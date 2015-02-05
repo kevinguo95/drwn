@@ -16,7 +16,7 @@ using namespace std;
 using namespace Eigen;
 
 drwnGrabCutInstanceHistogram::drwnGrabCutInstanceHistogram() :
-	drwnGrabCutInstance(), _fgColourModel(), _bgColourModel()
+	drwnGrabCutInstance(), _fgColourModel(pseudoCounts, channelBits), _bgColourModel(pseudoCounts, channelBits)
 {
 
 }
@@ -36,11 +36,9 @@ void drwnGrabCutInstanceHistogram::learnColourModel(const cv::Mat& mask, bool fg
 	drwnColourHistogram * model;
 	if (fg == FOREGROUND) {
 		model = &_fgColourModel;
-		cout << "foreground \n";
 	}
 	else {
 		model = &_bgColourModel;
-		cout << "background \n";
 	}
 
 	// extract colour samples for pixels in mask

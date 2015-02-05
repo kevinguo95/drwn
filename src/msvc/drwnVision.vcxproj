@@ -208,6 +208,8 @@
     <ClInclude Include="..\lib\vision\drwnColourHistogram.h" />
     <ClInclude Include="..\lib\vision\drwnFilterBankResponse.h" />
     <ClInclude Include="..\lib\vision\drwnGrabCutInstance.h" />
+    <ClInclude Include="..\lib\vision\drwnGrabCutInstanceGMM.h" />
+    <ClInclude Include="..\lib\vision\drwnGrabCutInstanceHistogram.h" />
     <ClInclude Include="..\lib\vision\drwnHOGFeatures.h" />
     <ClInclude Include="..\lib\vision\drwnImageCache.h" />
     <ClInclude Include="..\lib\vision\drwnImagePyramidCache.h" />
@@ -235,6 +237,8 @@
     <ClCompile Include="..\lib\vision\drwnColourHistogram.cpp" />
     <ClCompile Include="..\lib\vision\drwnFilterBankResponse.cpp" />
     <ClCompile Include="..\lib\vision\drwnGrabCutInstance.cpp" />
+    <ClCompile Include="..\lib\vision\drwnGrabCutInstanceGMM.cpp" />
+    <ClCompile Include="..\lib\vision\drwnGrabCutInstanceHistogram.cpp" />
     <ClCompile Include="..\lib\vision\drwnHOGFeatures.cpp" />
     <ClCompile Include="..\lib\vision\drwnImageCache.cpp" />
     <ClCompile Include="..\lib\vision\drwnImagePyramidCache.cpp" />

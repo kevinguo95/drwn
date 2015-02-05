@@ -56,6 +56,8 @@ bool drwnGrabCutInstance::bVisualize = false;
 size_t drwnGrabCutInstance::maxSamples = 5000;
 int drwnGrabCutInstance::numMixtures = 5;
 int drwnGrabCutInstance::maxIterations = 10;
+double drwnGrabCutInstance::pseudoCounts = 1.0;
+unsigned drwnGrabCutInstance::channelBits = 3;
 
 // drwnGrabCutInstance ------------------------------------------------------
 
@@ -636,13 +638,17 @@ public:
 
     void usage(ostream &os) const {
         os << "      visualize       :: visualization\n";
-        os << "      maxSamples      :: maximum samples for learning colour models (default: "
+        os << "      maxSamples      :: maximum samples for learning GMM colour models (default: "
            << drwnGrabCutInstance::maxSamples << ")\n";
-        os << "      numMixtures     :: number of mixture components in colour models (default: "
+        os << "      numMixtures     :: number of mixture components in GMM colour models (default: "
            << drwnGrabCutInstance::numMixtures << ")\n";
         os << "      maxIterations   :: maximum segmentation iterations (default: "
            << drwnGrabCutInstance::maxIterations << ")\n";
-    }
+		os << "      pseudoCounts    :: pseudocounts in colour histogram model (default: "
+			<< drwnGrabCutInstance::pseudoCounts << ")\n";
+		os << "      channelBits     :: number of bits per colour channel in histogram model (default: "
+			<< drwnGrabCutInstance::channelBits << ")\n";
+	}
 
     void setConfiguration(const char *name, const char *value) {
         if (!strcmp(name, "visualize")) {
@@ -651,8 +657,12 @@ public:
             drwnGrabCutInstance::maxSamples = std::max(1, atoi(value));
         } else if (!strcmp(name, "numMixtures")) {
             drwnGrabCutInstance::numMixtures = std::max(1, atoi(value));
-        } else if (!strcmp(name, "maxIterations")) {
-            drwnGrabCutInstance::maxIterations = std::max(0, atoi(value));
+		} else if (!strcmp(name, "maxIterations")) {
+			drwnGrabCutInstance::maxIterations = std::max(0, atoi(value));
+		} else if (!strcmp(name, "pseudoCounts")) {
+			drwnGrabCutInstance::pseudoCounts = std::max(0, atoi(value));
+		} else if (!strcmp(name, "channelBits")) {
+			drwnGrabCutInstance::channelBits = std::max(1, atoi(value));
         } else {
             DRWN_LOG_FATAL("unrecognized configuration option " << name << " for " << this->name());
         }

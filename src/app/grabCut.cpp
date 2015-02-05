@@ -48,78 +48,82 @@ void usage()
          << "  -x                :: visualize\n"
          << "  -scm <file>       :: save final colour models to <file>\n"
          << "  -lcm <file>       :: load initial colour models from <file>\n"
+		 << "  -type <modelType> :: select \"GMM\" or \"Histogram\" colour model (default: GMM)\n"
          << DRWN_STANDARD_OPTIONS_USAGE
 	 << endl;
 }
 
 int main(int argc, char *argv[])
 {
-    // default parameters
-    const char *outDir = NULL;
-    double scale = 1.0;
-    double weight = -1.0;
-    bool bVisualize = false;
-    const char *finalColourModelFile = NULL;
-    const char *initialColourModelFile = NULL;
+	// default parameters
+	const char *outDir = NULL;
+	double scale = 1.0;
+	double weight = -1.0;
+	bool bVisualize = false;
+	const char *finalColourModelFile = NULL;
+	const char *initialColourModelFile = NULL;
+	const char * modelType = "GMM";  //uses GMM by default
 
-    // process commandline arguments
-    DRWN_BEGIN_CMDLINE_PROCESSING(argc, argv)
-        DRWN_CMDLINE_INT_OPTION("-k", drwnGrabCutInstance::numMixtures)
-        DRWN_CMDLINE_INT_OPTION("-m", drwnGrabCutInstance::maxSamples)
-        DRWN_CMDLINE_STR_OPTION("-o", outDir)
-        DRWN_CMDLINE_REAL_OPTION("-s", scale)
-        DRWN_CMDLINE_REAL_OPTION("-w", weight)
-        DRWN_CMDLINE_BOOL_OPTION("-x", bVisualize)
-        DRWN_CMDLINE_STR_OPTION("-scm", finalColourModelFile)
-        DRWN_CMDLINE_STR_OPTION("-lcm", initialColourModelFile)
-    DRWN_END_CMDLINE_PROCESSING(usage());
+	// process commandline arguments
+	DRWN_BEGIN_CMDLINE_PROCESSING(argc, argv)
+		DRWN_CMDLINE_INT_OPTION("-k", drwnGrabCutInstance::numMixtures)
+		DRWN_CMDLINE_INT_OPTION("-m", drwnGrabCutInstance::maxSamples)
+		DRWN_CMDLINE_STR_OPTION("-o", outDir)
+		DRWN_CMDLINE_REAL_OPTION("-s", scale)
+		DRWN_CMDLINE_REAL_OPTION("-w", weight)
+		DRWN_CMDLINE_BOOL_OPTION("-x", bVisualize)
+		DRWN_CMDLINE_STR_OPTION("-scm", finalColourModelFile)
+		DRWN_CMDLINE_STR_OPTION("-lcm", initialColourModelFile)
+		DRWN_CMDLINE_STR_OPTION("-type", modelType)
+		DRWN_END_CMDLINE_PROCESSING(usage());
 
-    if ((DRWN_CMDLINE_ARGC != 1) && (DRWN_CMDLINE_ARGC != 2) && (DRWN_CMDLINE_ARGC != 3)) {
-        usage();
-        return -1;
-    }
+	if ((DRWN_CMDLINE_ARGC != 1) && (DRWN_CMDLINE_ARGC != 2) && (DRWN_CMDLINE_ARGC != 3)) {
+		usage();
+		return -1;
+	}
 
-    drwnCodeProfiler::tic(drwnCodeProfiler::getHandle("main"));
+	drwnCodeProfiler::tic(drwnCodeProfiler::getHandle("main"));
 
-    // load image
-    const char *imgFilename = DRWN_CMDLINE_ARGV[0];
-    const char *maskFilename = DRWN_CMDLINE_ARGC == 1 ? NULL : DRWN_CMDLINE_ARGV[1];
+	// load image
+	const char *imgFilename = DRWN_CMDLINE_ARGV[0];
+	const char *maskFilename = DRWN_CMDLINE_ARGC == 1 ? NULL : DRWN_CMDLINE_ARGV[1];
 	const char *trueMaskFilename = DRWN_CMDLINE_ARGC <= 2 ? NULL : DRWN_CMDLINE_ARGV[2];
-    cv::Mat img = cv::imread(string(imgFilename), CV_LOAD_IMAGE_COLOR);
+	cv::Mat img = cv::imread(string(imgFilename), CV_LOAD_IMAGE_COLOR);
 
-    // load mask
-    cv::Mat mask(img.rows, img.cols, CV_8UC1);
-    if (maskFilename == NULL) {
-        cv::Rect bb = drwnInputBoundingBox(string("annotate"), img);
-        DRWN_ASSERT((bb.width > 0) && (bb.height > 0));
-        mask.setTo(cv::Scalar(drwnGrabCutInstance::MASK_BG));
-        mask(bb) = cvScalar(drwnGrabCutInstance::MASK_C_FG); 
-    } else {
-        mask = cv::imread(string(maskFilename), CV_LOAD_IMAGE_GRAYSCALE);
-	
-    }
+	// load mask
+	cv::Mat mask(img.rows, img.cols, CV_8UC1);
+	if (maskFilename == NULL) {
+		cv::Rect bb = drwnInputBoundingBox(string("annotate"), img);
+		DRWN_ASSERT((bb.width > 0) && (bb.height > 0));
+		mask.setTo(cv::Scalar(drwnGrabCutInstance::MASK_BG));
+		mask(bb) = cvScalar(drwnGrabCutInstance::MASK_C_FG);
+	}
+	else {
+		mask = cv::imread(string(maskFilename), CV_LOAD_IMAGE_GRAYSCALE);
 
-	
+	}
+
+
 	//load true mask
 	cv::Mat trueMask;
 	if (trueMaskFilename != NULL) {
 		trueMask = cv::imread(string(trueMaskFilename), CV_LOAD_IMAGE_GRAYSCALE);
 	}
-	
-    // rescale image and mask
-    if (scale != 1.0) {
-        drwnResizeInPlace(img, (int)(scale * img.rows), (int)(scale * img.cols), CV_INTER_LINEAR);
-        drwnResizeInPlace(mask, img.rows, img.cols, CV_INTER_NN);
-    }
 
-    // show image and mask
-    if (bVisualize) {
-        drwnShowDebuggingImage(img, string("image"), false);
-        drwnShowDebuggingImage(mask, string("mask"), false);
+	// rescale image and mask
+	if (scale != 1.0) {
+		drwnResizeInPlace(img, (int)(scale * img.rows), (int)(scale * img.cols), CV_INTER_LINEAR);
+		drwnResizeInPlace(mask, img.rows, img.cols, CV_INTER_NN);
+	}
+
+	// show image and mask
+	if (bVisualize) {
+		drwnShowDebuggingImage(img, string("image"), false);
+		drwnShowDebuggingImage(mask, string("mask"), false);
 		if (trueMaskFilename != NULL) drwnShowDebuggingImage(trueMask, string("trueMask"), false);
-    }
-    drwnGrabCutInstance::bVisualize = bVisualize;
-	
+	}
+	drwnGrabCutInstance::bVisualize = bVisualize;
+
 	//prepare output text file
 	ofstream output;
 	int filePos;
@@ -127,18 +131,26 @@ int main(int argc, char *argv[])
 		output.open("out.txt", ios_base::app);
 		output << "\n" << &(trueMaskFilename[28]);
 	}
-	
-    // run grabCut with different weights
-    const double minWeight = (weight < 0.0) ? 0.0 : weight;
-    const double maxWeight = (weight < 0.0) ? 256.0 : weight;
-    drwnGrabCutInstanceGMM model;
-    model.name = drwn::strBaseName(imgFilename);
+
+	// run grabCut with different weights
+	const double minWeight = (weight < 0.0) ? 0.0 : weight;
+	const double maxWeight = (weight < 0.0) ? 256.0 : weight;
+	drwnGrabCutInstance * model = NULL;
+	if (!strcmp(modelType, "GMM")) {
+		model = new drwnGrabCutInstanceGMM();
+	} else if (!strcmp(modelType, "Histogram")) {
+		model = new drwnGrabCutInstanceHistogram();
+	} else {
+		DRWN_ASSERT(model != NULL);
+	}
+
+    model->name = drwn::strBaseName(imgFilename);
     for (double w = minWeight; w <= maxWeight; ) {
         // initialize model
-		if (trueMaskFilename != NULL) model.initialize(img, mask, trueMask, initialColourModelFile);
-		else model.initialize(img, mask, initialColourModelFile);
-        model.setBaseModelWeights(1.0, 0.0, w);
-        cv::Mat seg = model.inference();
+		if (trueMaskFilename != NULL) model->initialize(img, mask, trueMask, initialColourModelFile);
+		else model->initialize(img, mask, initialColourModelFile);
+        model->setBaseModelWeights(1.0, 0.0, w);
+        cv::Mat seg = model->inference();
 
         // save segmentation mask
         if (outDir != NULL) {
@@ -160,7 +172,7 @@ int main(int argc, char *argv[])
 		double loss;
 		if (trueMaskFilename != NULL){
 			//write loss to a text file
-			output << " " << model.loss(seg);
+			output << " " << model->loss(seg);
 
 		}
 
@@ -171,7 +183,7 @@ int main(int argc, char *argv[])
     // save final colour model file
     if (finalColourModelFile != NULL) {
         DRWN_LOG_VERBOSE("writing colour models to " << finalColourModelFile << "...");
-        model.saveColourModels(finalColourModelFile);
+        model->saveColourModels(finalColourModelFile);
 		DRWN_LOG_VERBOSE("Done");
     }
 
@@ -183,9 +195,11 @@ int main(int argc, char *argv[])
     drwnCodeProfiler::toc(drwnCodeProfiler::getHandle("main"));
     drwnCodeProfiler::print();
 
+	delete model;
+
 	//close text file
 	if (trueMaskFilename != NULL) output.close();
-
+	
     return 0;
 }
 

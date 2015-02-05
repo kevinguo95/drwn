@@ -53,10 +53,16 @@ public:
     static const unsigned char MASK_C_BOTH = 0xc0;   //!< both colour mask
     static const unsigned char MASK_C_NONE = 0x20;   //!< neither colour mask
 
-	static size_t maxSamples;  //!< maximum samples to use for colour models
 	static bool bVisualize;    //!< visualize output
 	static int maxIterations;  //!< maximum number of inference iterations
-	static int numMixtures;    //!< number of mixture components in colour models
+
+	//GMM variables
+	static size_t maxSamples;  //!< maximum samples to use for GMM colour models
+	static int numMixtures;    //!< number of mixture components in GMM colour models
+
+	//colour histogram variables
+	static double pseudoCounts;   //!< pseudocounts in colour histogram model
+	static unsigned channelBits; //!< number of bits per RGB colour channel for colour histogram model
 
 public:
     // meta parameters
