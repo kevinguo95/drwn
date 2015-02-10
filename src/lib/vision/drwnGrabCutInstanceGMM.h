@@ -15,12 +15,10 @@
 class drwnGrabCutInstanceGMM :public drwnGrabCutInstance
 {
 public:
-
-
 	drwnGrabCutInstanceGMM();
 	~drwnGrabCutInstanceGMM();
-	//update colour models
 
+	//update colour models
 	void updateColourModels(drwnGaussianMixture& fgColourModel,
 		drwnGaussianMixture& bgColourModel) {
 		_fgColourModel = fgColourModel;
@@ -28,6 +26,7 @@ public:
 		updateUnaryPotentials();
 	}
 
+	//declaration to prevent unused pure virtual function 
 	void updateColourModels(drwnColourHistogram& fgColourModel,
 		drwnColourHistogram& bgColourModel) {}
 

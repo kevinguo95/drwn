@@ -80,6 +80,14 @@ class drwnColourHistogram : public drwnStdObjIface {
         accumulate(colour.val[2], colour.val[1], colour.val[0]);
     }
 
+	//calculate bin ratios for interpolated histogram model 
+	vector<double> calcRatios(unsigned red, unsigned green, unsigned blue, unsigned indx);
+
+	//distance function
+	double distance(int x, int y, int z) { return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2)); }
+
+	bool isEdge(int indx, int dist);
+
     //! return probability of an RGB colour sample
     double probability(unsigned char red, unsigned char green, unsigned char blue) const;
     //! return probability of a cv::Vec3b colour sample

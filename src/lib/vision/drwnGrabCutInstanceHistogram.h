@@ -33,6 +33,7 @@ public:
 		updateUnaryPotentials();
 	}
 
+	//declaration to prevent unused pure virtual function 
 	void updateColourModels(drwnGaussianMixture& fgColourModel,
 		drwnGaussianMixture& bgColourModel) {}
 

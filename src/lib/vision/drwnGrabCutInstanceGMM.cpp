@@ -4,7 +4,7 @@
 drwnGrabCutInstanceGMM::drwnGrabCutInstanceGMM() :
 	drwnGrabCutInstance(), _fgColourModel(3, numMixtures), _bgColourModel(3, numMixtures)
 {
-	cout << numMixtures << endl;
+
 }
 
 
