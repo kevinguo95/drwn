@@ -171,7 +171,6 @@ void drwnGrabCutInstance::initialize(const cv::Mat& img, const cv::Mat& inferMas
 	DRWN_ASSERT(inferMask.data != NULL);
     // delete previous instance data
     free();
-
     // clone image and masks
     _img = img.clone();
     _mask = inferMask.clone();
@@ -182,6 +181,8 @@ void drwnGrabCutInstance::initialize(const cv::Mat& img, const cv::Mat& inferMas
 
     // create unary potentials
     _unary = cv::Mat(img.rows, img.cols, CV_32FC1);
+	DRWN_ASSERT((_unary.rows == img.rows) && (_unary.cols == img.cols));
+
 
     // learn or load colour models
     if (colorModelFile == NULL) {
@@ -359,7 +360,6 @@ cv::Mat drwnGrabCutInstance::inference()
 
         // run inference
         cv::Mat seg = graphCut(_unary);
-
         // visualize results
         if (bVisualize) {
             drwnShowDebuggingImage(seg, string("segmentation"), false);
@@ -618,7 +618,7 @@ cv::Mat drwnGrabCutInstance::graphCut(const cv::Mat& unary) const
         }
     }
 
-    drwnCodeProfiler::toc(hMinCutIteration);
+	drwnCodeProfiler::toc(hMinCutIteration);
     return mapAssignment;
 }
 

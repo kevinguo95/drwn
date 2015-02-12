@@ -151,7 +151,6 @@ int main(int argc, char *argv[])
 		else model->initialize(img, mask, initialColourModelFile);
         model->setBaseModelWeights(1.0, 0.0, w);
         cv::Mat seg = model->inference();
-
         // save segmentation mask
         if (outDir != NULL) {
             string wStr = drwn::strReplaceSubstr(toString(0.01 * (int)(w * 100)), ".", "_");

@@ -82,19 +82,19 @@ bool drwnColourHistogram::load(drwnXMLNode& xml)
 
 void drwnColourHistogram::accumulate(unsigned char red, unsigned char green, unsigned char blue)
 {
-    //! \todo interpolate between 8 neighbouring bins
-    const unsigned indx_r = (red & _mask) >> (8 - _channelBits);
-    const unsigned indx_g = (green & _mask) >> (8 - _channelBits);
-    const unsigned indx_b = (blue & _mask) >> (8 - _channelBits);
-    const unsigned dist_r = red & ~_mask;
-    const unsigned dist_g = green & ~_mask;
-    const unsigned dist_b = blue & ~_mask;
-	
-	int middle = pow(2, _channelBits - 1);
+	//! \todo interpolate between 8 neighbouring bins
+	const unsigned indx_r = (red & _mask) >> (8 - _channelBits);
+	const unsigned indx_g = (green & _mask) >> (8 - _channelBits);
+	const unsigned indx_b = (blue & _mask) >> (8 - _channelBits);
+	const unsigned dist_r = red & ~_mask;
+	const unsigned dist_g = green & ~_mask;
+	const unsigned dist_b = blue & ~_mask;
 
-   	int dir_r = dist_r < middle ? -1 : 1;
+	int middle = pow(2, 7 - _channelBits);
+
+	int dir_r = dist_r < middle ? -1 : 1;
 	int dir_g = dist_g < middle ? -1 : 1;
-	int dir_b = dist_b < middle ? -1 : 1; 
+	int dir_b = dist_b < middle ? -1 : 1;
 
 
 	const unsigned indx = (indx_r << (2 * _channelBits)) | (indx_g << _channelBits) | indx_b;
@@ -102,19 +102,40 @@ void drwnColourHistogram::accumulate(unsigned char red, unsigned char green, uns
 	//cout << " red = " << dir_r << " green = " << dir_g << " blue = " << dir_b << endl;
 	//cout << " red = " << dist_r << " green = " << dist_g << " blue = " << dist_b << endl;
 	//vector to store bin ratios
-
 	std::vector<double> ratio = calcRatios(dist_r, dist_g, dist_b, indx);
 
 	_histogram[indx] += ratio.at(0);
 	//cout << indx << " += " << ratio.at(0) << endl;
-	_histogram[indx + dir_b] += ratio.at(1);
-	//cout << indx +dir_b << " += " << ratio.at(1) << endl;
-	_histogram[indx + dir_g*(1<<_channelBits)] += ratio.at(2);
-	_histogram[indx + dir_b + dir_g*(1 << _channelBits)] += ratio.at(3);
-	_histogram[indx + dir_r*(1 << (2 * _channelBits))] += ratio.at(4);
-	_histogram[indx + dir_b + dir_r*(1 << (2 * _channelBits))] += ratio.at(5);
-	_histogram[indx + dir_r*(1 << (2 * _channelBits)) + dir_g*(1 << _channelBits)] += ratio.at(6);
-	_histogram[indx + dir_b + dir_g*(1 << _channelBits) + dir_r*(1 << (2 * _channelBits))] += ratio.at(7);
+	if (ratio.at(1) != 0) {
+		DRWN_ASSERT(indx + dir_b < _histogram.size());
+		_histogram[indx + dir_b] += ratio.at(1);
+	}
+	if (ratio.at(2) != 0) {
+		DRWN_ASSERT(indx + dir_g*(1 << _channelBits) < _histogram.size());
+		_histogram[indx + dir_g*(1 << _channelBits)] += ratio.at(2);
+	}
+	if (ratio.at(3) != 0) {
+		DRWN_ASSERT(indx + dir_b + dir_g*(1 << _channelBits) < _histogram.size());
+		_histogram[indx + dir_b + dir_g*(1 << _channelBits)] += ratio.at(3);
+	}
+	if (ratio.at(4) != 0) {
+		DRWN_ASSERT(indx + dir_r*(1 << (2 * _channelBits)) < _histogram.size());
+		_histogram[indx + dir_r*(1 << (2 * _channelBits))] += ratio.at(4);
+
+	}
+	if (ratio.at(5) != 0) {
+		DRWN_ASSERT(indx + dir_b + dir_r*(1 << (2 * _channelBits)) < _histogram.size());
+		_histogram[indx + dir_b + dir_r*(1 << (2 * _channelBits))] += ratio.at(5);
+	}
+	if (ratio.at(6) != 0) {
+		DRWN_ASSERT(indx + dir_g*(1 << _channelBits) + dir_r*(1 << (2 * _channelBits)) < _histogram.size());
+		_histogram[indx + dir_r*(1 << (2 * _channelBits)) + dir_g*(1 << _channelBits)] += ratio.at(6);
+	}
+
+	if (ratio.at(7) != 0) {
+		DRWN_ASSERT(indx + dir_b + dir_g*(1 << _channelBits) + dir_r*(1 << (2 * _channelBits)) < _histogram.size());
+		_histogram[indx + dir_b + dir_g*(1 << _channelBits) + dir_r*(1 << (2 * _channelBits))] += ratio.at(7);
+	}
 
 	_totalCounts += 1.0;	
 }
@@ -202,7 +223,6 @@ vector<double> drwnColourHistogram::calcRatios(unsigned dist_r, unsigned dist_g,
 	DRWN_ASSERT(distances.size() == 8);
 	//find sum of distances
 	double sum = 0.0;
-	double ratioSum = 0.0;
 	for (int i = 0; i < distances.size(); i++) {
 		sum += distances.at(i);
 	}
@@ -227,6 +247,6 @@ bool drwnColourHistogram::isEdge(int indx, int dist)
 	int middle;
 	if (_channelBits == 8) middle = 0;
 	else middle = pow(2, 7 - _channelBits);
-	return(((indx == 0) && (dist < middle)) || ((indx == 255) && (dist > middle))); 
+	return(((indx == 0) && (dist < middle)) || ((indx == ((1 << _channelBits)-1) && (dist >= middle)))); 
 	
 }

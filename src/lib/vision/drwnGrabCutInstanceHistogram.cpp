@@ -41,6 +41,8 @@ void drwnGrabCutInstanceHistogram::learnColourModel(const cv::Mat& mask, bool fg
 		model = &_bgColourModel;
 	}
 
+	model->clear();
+
 	// extract colour samples for pixels in mask
 	vector<unsigned char> clrVector;
 
