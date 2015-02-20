@@ -1,3 +1,16 @@
+/*****************************************************************************
+** DARWIN: A FRAMEWORK FOR MACHINE LEARNING RESEARCH AND DEVELOPMENT
+** Distributed under the terms of the BSD license (see the LICENSE file)
+** Copyright (c) 2007-2015, Stephen Gould
+** All rights reserved.
+**
+******************************************************************************
+** FILENAME:    drwnGrabCutInstanceHistogram.h
+** AUTHOR(S):   Stephen Gould <stephen.gould@anu.edu.au>
+**				Kevin Guo <Kevin.Guo@nicta.com.au>
+**
+*****************************************************************************/
+
 #pragma once
 #include "Eigen/Core"
 

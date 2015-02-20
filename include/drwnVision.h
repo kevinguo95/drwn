@@ -19,7 +19,6 @@
 #include "../src/lib/vision/drwnGrabCutInstance.h"
 #include "../src/lib/vision/drwnGrabCutInstanceHistogram.h"
 #include "../src/lib/vision/drwnGrabCutInstanceGMM.h"
-#include "../src/lib/vision/drwnGrabCutInstanceGMM.h"
 #include "../src/lib/vision/drwnHOGFeatures.h"
 #include "../src/lib/vision/drwnImageCache.h"
 #include "../src/lib/vision/drwnImagePyramidCache.h"

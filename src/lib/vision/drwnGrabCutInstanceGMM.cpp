@@ -1,3 +1,16 @@
+/*****************************************************************************
+** DARWIN: A FRAMEWORK FOR MACHINE LEARNING RESEARCH AND DEVELOPMENT
+** Distributed under the terms of the BSD license (see the LICENSE file)
+** Copyright (c) 2007-2015, Stephen Gould
+** All rights reserved.
+**
+******************************************************************************
+** FILENAME:    drwnGrabCutInstanceGMM.cpp
+** AUTHOR(S):   Stephen Gould <stephen.gould@anu.edu.au>
+**				Kevin Guo <Kevin.Guo@nicta.com.au>
+**
+*****************************************************************************/
+
 #include "drwnGrabCutInstanceGMM.h"
 
 
@@ -11,46 +24,6 @@ drwnGrabCutInstanceGMM::drwnGrabCutInstanceGMM() :
 drwnGrabCutInstanceGMM::~drwnGrabCutInstanceGMM()
 {
 	free();
-}
-
-
-// load colour models
-void drwnGrabCutInstanceGMM::loadColourModels(const char *filename)
-{
-	DRWN_ASSERT(filename != NULL);
-
-	drwnXMLDoc xml;
-	drwnXMLNode *node = drwnParseXMLFile(xml, filename, "drwnGrabCutInstance");
-
-	drwnXMLNode *subnode = node->first_node("foreground");
-	DRWN_ASSERT(subnode != NULL);
-	_fgColourModel.load(*subnode);
-	subnode = node->first_node("background");
-	DRWN_ASSERT(subnode != NULL);
-	_bgColourModel.load(*subnode);
-
-	updateUnaryPotentials();
-}
-
-// save colour models
-void drwnGrabCutInstanceGMM::saveColourModels(const char *filename) const
-{
-	DRWN_ASSERT(filename != NULL);
-
-	drwnXMLDoc xml;
-	drwnXMLNode *node = drwnAddXMLChildNode(xml, "drwnGrabCutInstance", NULL, false);
-	drwnAddXMLAttribute(*node, "drwnVersion", DRWN_VERSION, false);
-
-	drwnXMLNode *child = drwnAddXMLChildNode(*node, "foreground", NULL, false);
-	_fgColourModel.save(*child);
-
-	child = drwnAddXMLChildNode(*node, "background", NULL, false);
-	_bgColourModel.save(*child);
-
-	ofstream ofs(filename);
-	ofs << xml << endl;
-	DRWN_ASSERT(!ofs.fail());
-	ofs.close();
 }
 
 void drwnGrabCutInstanceGMM::learnColourModel(const cv::Mat& mask, bool fg)
@@ -103,6 +76,46 @@ void drwnGrabCutInstanceGMM::learnColourModel(const cv::Mat& mask, bool fg)
 	model->train(data);
 
 	DRWN_FCN_TOC;
+}
+
+
+// save colour models
+void drwnGrabCutInstanceGMM::saveColourModels(const char *filename) const
+{
+	DRWN_ASSERT(filename != NULL);
+
+	drwnXMLDoc xml;
+	drwnXMLNode *node = drwnAddXMLChildNode(xml, "drwnGrabCutInstance", NULL, false);
+	drwnAddXMLAttribute(*node, "drwnVersion", DRWN_VERSION, false);
+
+	drwnXMLNode *child = drwnAddXMLChildNode(*node, "foreground", NULL, false);
+	_fgColourModel.save(*child);
+
+	child = drwnAddXMLChildNode(*node, "background", NULL, false);
+	_bgColourModel.save(*child);
+
+	ofstream ofs(filename);
+	ofs << xml << endl;
+	DRWN_ASSERT(!ofs.fail());
+	ofs.close();
+}
+
+// load colour models
+void drwnGrabCutInstanceGMM::loadColourModels(const char *filename)
+{
+	DRWN_ASSERT(filename != NULL);
+
+	drwnXMLDoc xml;
+	drwnXMLNode *node = drwnParseXMLFile(xml, filename, "drwnGrabCutInstance");
+
+	drwnXMLNode *subnode = node->first_node("foreground");
+	DRWN_ASSERT(subnode != NULL);
+	_fgColourModel.load(*subnode);
+	subnode = node->first_node("background");
+	DRWN_ASSERT(subnode != NULL);
+	_bgColourModel.load(*subnode);
+
+	updateUnaryPotentials();
 }
 
 void drwnGrabCutInstanceGMM::updateUnaryPotentials()

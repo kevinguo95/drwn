@@ -38,7 +38,7 @@ using namespace Eigen;
 void usage()
 {
     cerr << DRWN_USAGE_HEADER << endl;
-    cerr << "USAGE: ./grabCut [OPTIONS] <image> (<mask>)\n";
+    cerr << "USAGE: ./grabCut [OPTIONS] <image> (<mask>) (<groundTruth>)\n";
     cerr << "OPTIONS:\n"
          << "  -k <num>          :: number of mixture components (default: 5)\n"
          << "  -m <samples>      :: max samples to use when learning colour models\n"
@@ -46,6 +46,7 @@ void usage()
          << "  -s <scale>        :: rescale input\n"
          << "  -w <weight>       :: use pairwise weight provided (otherwise tries many)\n"
          << "  -x                :: visualize\n"
+		 << "  -i                :: interpolate colour histogram\n"
          << "  -scm <file>       :: save final colour models to <file>\n"
          << "  -lcm <file>       :: load initial colour models from <file>\n"
 		 << "  -type <modelType> :: select \"GMM\" or \"Histogram\" colour model (default: GMM)\n"
@@ -72,6 +73,7 @@ int main(int argc, char *argv[])
 		DRWN_CMDLINE_REAL_OPTION("-s", scale)
 		DRWN_CMDLINE_REAL_OPTION("-w", weight)
 		DRWN_CMDLINE_BOOL_OPTION("-x", bVisualize)
+		DRWN_CMDLINE_BOOL_OPTION("-i", drwnGrabCutInstance::bInterpolate)
 		DRWN_CMDLINE_STR_OPTION("-scm", finalColourModelFile)
 		DRWN_CMDLINE_STR_OPTION("-lcm", initialColourModelFile)
 		DRWN_CMDLINE_STR_OPTION("-type", modelType)
@@ -131,7 +133,6 @@ int main(int argc, char *argv[])
 		output.open("out.txt", ios_base::app);
 		output << "\n" << &(trueMaskFilename[28]);
 	}
-
 	// run grabCut with different weights
 	const double minWeight = (weight < 0.0) ? 0.0 : weight;
 	const double maxWeight = (weight < 0.0) ? 256.0 : weight;
@@ -158,7 +159,6 @@ int main(int argc, char *argv[])
                 string("_mask_") + wStr + string(".png");
             DRWN_LOG_VERBOSE("writing segmentation to " << filename << "...");
             cv::imwrite(filename, seg);
-			//cout << w << " = " << wStr;
 
             filename = string(outDir) + drwn::strBaseName(string(imgFilename)) +
                 string("_img_") + wStr + string(".png");
@@ -168,10 +168,9 @@ int main(int argc, char *argv[])
             m.setTo(cv::Scalar(255, 0, 0), seg);
             cv::imwrite(filename, m);
         }
-		double loss;
 		if (trueMaskFilename != NULL){
 			//write loss to a text file
-			output << " " << model->loss(seg);
+			output << " " << 1-model->loss(seg);
 
 		}
 
@@ -185,6 +184,8 @@ int main(int argc, char *argv[])
         model->saveColourModels(finalColourModelFile);
 		DRWN_LOG_VERBOSE("Done");
     }
+	//close text file
+	if (trueMaskFilename != NULL) output.close();
 
     if (bVisualize && (weight >= 0.0)) {
         cvWaitKey(-1);
@@ -196,8 +197,7 @@ int main(int argc, char *argv[])
 
 	delete model;
 
-	//close text file
-	if (trueMaskFilename != NULL) output.close();
+
 	
     return 0;
 }

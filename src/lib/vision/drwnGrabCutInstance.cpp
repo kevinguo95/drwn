@@ -58,6 +58,7 @@ int drwnGrabCutInstance::numMixtures = 5;
 int drwnGrabCutInstance::maxIterations = 10;
 double drwnGrabCutInstance::pseudoCounts = 1.0;
 unsigned drwnGrabCutInstance::channelBits = 3;
+bool drwnGrabCutInstance::bInterpolate = 0;
 
 // drwnGrabCutInstance ------------------------------------------------------
 
@@ -645,9 +646,11 @@ public:
         os << "      maxIterations   :: maximum segmentation iterations (default: "
            << drwnGrabCutInstance::maxIterations << ")\n";
 		os << "      pseudoCounts    :: pseudocounts in colour histogram model (default: "
-			<< drwnGrabCutInstance::pseudoCounts << ")\n";
+		   << drwnGrabCutInstance::pseudoCounts << ")\n";
 		os << "      channelBits     :: number of bits per colour channel in histogram model (default: "
-			<< drwnGrabCutInstance::channelBits << ")\n";
+		   << drwnGrabCutInstance::channelBits << ")\n";
+		os << "      interpolate     :: interpolated colour histogram model (default: "
+		   << drwnGrabCutInstance::bInterpolate << ")\n";
 	}
 
     void setConfiguration(const char *name, const char *value) {

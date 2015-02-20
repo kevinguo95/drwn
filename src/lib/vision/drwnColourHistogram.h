@@ -69,6 +69,7 @@ class drwnColourHistogram : public drwnStdObjIface {
     bool save(drwnXMLNode& xml) const;
     bool load(drwnXMLNode& xml);
 
+
     //! accumulate an RGB colour sample
     void accumulate(unsigned char red, unsigned char green, unsigned char blue);
     //! accumulate a cv::Vec3b colour sample
@@ -80,12 +81,23 @@ class drwnColourHistogram : public drwnStdObjIface {
         accumulate(colour.val[2], colour.val[1], colour.val[0]);
     }
 
+	//! accumulate with interpolation
+	void interpolatedAccumulate(unsigned char red, unsigned char green, unsigned char blue);
+
+	void interpolatedAccumulate(const cv::Vec3b& colour) {
+		interpolatedAccumulate(colour.val[2], colour.val[1], colour.val[0]);
+	}
+	void interpolatedAccumulate(const cv::Scalar& colour) {
+		interpolatedAccumulate(colour.val[2], colour.val[1], colour.val[0]);
+	}
+
 	//calculate bin ratios for interpolated histogram model 
 	vector<double> calcRatios(unsigned red, unsigned green, unsigned blue, unsigned indx);
 
 	//distance function
 	double distance(int x, int y, int z) { return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2)); }
 
+	//returns 1 if bin is on edge of histogram, 0 otherwise
 	bool isEdge(int indx, int dist);
 
     //! return probability of an RGB colour sample

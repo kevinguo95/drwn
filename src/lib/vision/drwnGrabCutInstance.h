@@ -63,6 +63,7 @@ public:
 	//colour histogram variables
 	static double pseudoCounts;   //!< pseudocounts in colour histogram model
 	static unsigned channelBits; //!< number of bits per RGB colour channel for colour histogram model
+	static bool bInterpolate;     //!< interpolate colour histogram model
 
 public:
     // meta parameters

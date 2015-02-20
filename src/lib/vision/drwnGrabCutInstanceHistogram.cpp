@@ -1,3 +1,16 @@
+/*****************************************************************************
+** DARWIN: A FRAMEWORK FOR MACHINE LEARNING RESEARCH AND DEVELOPMENT
+** Distributed under the terms of the BSD license (see the LICENSE file)
+** Copyright (c) 2007-2015, Stephen Gould
+** All rights reserved.
+**
+******************************************************************************
+** FILENAME:    drwnGrabCutInstanceHistogram.cpp
+** AUTHOR(S):   Stephen Gould <stephen.gould@anu.edu.au>
+**				Kevin Guo <Kevin.Guo@nicta.com.au>
+**
+*****************************************************************************/
+
 // c++ standard headers
 #include <cstdlib>
 #include <cstdio>
@@ -5,9 +18,6 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
-
-// opencv library headers
-#include "highgui.h"
 
 #include "drwnGrabCutInstanceHistogram.h"
 
@@ -50,31 +60,16 @@ void drwnGrabCutInstanceHistogram::learnColourModel(const cv::Mat& mask, bool fg
 		for (int x = 0; x < _img.cols; x++) {
 			if (mask.at<unsigned char>(y, x) != 0x00) {
 				clrVector = drwnGrabCutInstanceHistogram::pixelColour(y, x);
-				model->accumulate(clrVector.at(0), clrVector.at(1), clrVector.at(2));
-
+				if (drwnGrabCutInstance::bInterpolate) {
+					model->interpolatedAccumulate(clrVector.at(0), clrVector.at(1), clrVector.at(2));
+				} else {
+					model->accumulate(clrVector.at(0), clrVector.at(1), clrVector.at(2));
+				}
 			}
 
 		}
 	}
 	DRWN_FCN_TOC;
-}
-
-// load colour models
-void drwnGrabCutInstanceHistogram::loadColourModels(const char *filename)
-{
-	DRWN_ASSERT(filename != NULL);
-
-	drwnXMLDoc xml;
-	drwnXMLNode *node = drwnParseXMLFile(xml, filename, "drwnGrabCutInstance");
-
-	drwnXMLNode *subnode = node->first_node("foreground");
-	DRWN_ASSERT(subnode != NULL);
-	_fgColourModel.load(*subnode);
-	subnode = node->first_node("background");
-	DRWN_ASSERT(subnode != NULL);
-	_bgColourModel.load(*subnode);
-
-	updateUnaryPotentials();
 }
 
 // save colour models
@@ -96,6 +91,24 @@ void drwnGrabCutInstanceHistogram::saveColourModels(const char *filename) const
 	ofs.close();
 }
 
+
+// load colour models
+void drwnGrabCutInstanceHistogram::loadColourModels(const char *filename)
+{
+	DRWN_ASSERT(filename != NULL);
+
+	drwnXMLDoc xml;
+	drwnXMLNode *node = drwnParseXMLFile(xml, filename, "drwnGrabCutInstance");
+
+	drwnXMLNode *subnode = node->first_node("foreground");
+	DRWN_ASSERT(subnode != NULL);
+	_fgColourModel.load(*subnode);
+	subnode = node->first_node("background");
+	DRWN_ASSERT(subnode != NULL);
+	_bgColourModel.load(*subnode);
+
+	updateUnaryPotentials();
+}
 
 void drwnGrabCutInstanceHistogram::updateUnaryPotentials()
 {
